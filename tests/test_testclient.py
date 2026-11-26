@@ -632,6 +632,16 @@ def test_with_duplicate_headers(test_client_factory: TestClientFactory) -> None:
     assert response.json() == {"x-token": ["foo", "bar"]}
 
 
+def test_preserves_raw_header_value(test_client_factory: TestClientFactory) -> None:
+    async def homepage(request: Request) -> Response:
+        return Response(dict(request.headers.raw)[b"x-note"])
+
+    app = Starlette(routes=[Route("/", endpoint=homepage)])
+    client = test_client_factory(app)
+    response = client.get("/", headers=[(b"X-Note", b"caf\xe9")])
+    assert response.content == b"caf\xe9"
+
+
 def test_merge_url(test_client_factory: TestClientFactory) -> None:
     def homepage(request: Request) -> Response:
         return Response(request.url.path)

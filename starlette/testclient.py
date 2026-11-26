@@ -250,7 +250,7 @@ class _TestClientTransport(httpx.BaseTransport):
             headers = [(b"host", request.url.netloc)]
 
         # Include other request headers.
-        headers += [(key.lower().encode(), value.encode()) for key, value in request.headers.multi_items()]
+        headers += [(key.lower(), value) for key, value in request.headers.raw]
 
         scope: dict[str, Any]
 
