@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
-import httpx2 as httpx
-
 from starlette.testclient import TestClient
 from starlette.types import ASGIApp
 
 if TYPE_CHECKING:
+    import httpx2 as httpx
 
     class TestClientFactory(Protocol):  # pragma: no cover
         def __call__(
