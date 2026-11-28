@@ -204,6 +204,8 @@ def test_app():
 
 You can also test websocket sessions with the test client.
 
+Relative WebSocket URLs use the client's `base_url`. An `http` base URL uses `ws`, and an `https` base URL uses `wss`.
+
 The `httpx2` library will be used to build the initial handshake, meaning you
 can use the same authentication options and other headers between both http and
 websocket testing.

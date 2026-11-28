@@ -19,7 +19,7 @@ from starlette.exceptions import StarletteDeprecationWarning
 from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
-from starlette.routing import Route
+from starlette.routing import Host, Route, Router, WebSocketRoute
 from starlette.testclient import ASGIInstance, TestClient
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from starlette.websockets import WebSocket, WebSocketDisconnect
@@ -503,6 +503,31 @@ def test_websocket_blocking_receive(test_client_factory: TestClientFactory) -> N
     with client.websocket_connect("/") as websocket:
         data = websocket.receive_json()
         assert data == {"message": "test"}
+
+
+@pytest.mark.parametrize(
+    ("base_url", "url", "expected"),
+    [
+        ("http://app.example.org/base/", "room?page=2", "ws://app.example.org/base/room?page=2"),
+        ("https://app.example.org:8443", "/room", "wss://app.example.org:8443/room"),
+        ("https://app.example.org", "//other.example.org/room", "wss://other.example.org/room"),
+        ("https://app.example.org", "ws://other.example.org/room", "ws://other.example.org/room"),
+        ("http://app.example.org", "wss://other.example.org/room", "wss://other.example.org/room"),
+    ],
+)
+def test_websocket_connect_base_url(
+    test_client_factory: TestClientFactory, base_url: str, url: str, expected: str
+) -> None:
+    async def echo_url(websocket: WebSocket) -> None:
+        await websocket.accept()
+        await websocket.send_text(str(websocket.url))
+        await websocket.close()
+
+    route = WebSocketRoute("/{path:path}", echo_url)
+    app = Router(routes=[Host("{name}.example.org", route)])
+    client = test_client_factory(app, base_url=base_url)
+    with client.websocket_connect(url) as websocket:
+        assert websocket.receive_text() == expected
 
 
 def test_websocket_not_block_on_close(test_client_factory: TestClientFactory) -> None:

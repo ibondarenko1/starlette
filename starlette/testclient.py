@@ -537,7 +537,8 @@ class TestClient(httpx.Client):
         subprotocols: Sequence[str] | None = None,
         **kwargs: Any,
     ) -> WebSocketTestSession:
-        url = urljoin("ws://testserver", url)
+        scheme = {"http": "ws", "https": "wss"}.get(self.base_url.scheme, self.base_url.scheme)
+        url = urljoin(str(self.base_url.copy_with(scheme=scheme)), url)
         headers = kwargs.get("headers", {})
         headers.setdefault("connection", "upgrade")
         headers.setdefault("sec-websocket-key", "testserver==")
